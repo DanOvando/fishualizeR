@@ -191,30 +191,31 @@ counter <-
   }
 
 
-observeEvent(input$group, {
+glcmps <- eventReactive(input$group, {
   grouped_lcomps <-
     counter(
       lcomps,
       group_var = input$select_groupers,
       length_col = input$select_ldata
     )
+})
 
   #https://mastering-shiny.org/action-transfer.html
   # remember tomorrow that you can return output of render / observed event as thing()
   output$grouped_lcomps <-
-    renderDataTable(grouped_lcomps,  options = list(pageLength = 5))
+    renderDataTable(glcmps(),  options = list(pageLength = 5))
 
   output$download_grouper <- downloadHandler(
     filename = function() {
       "aggregated-lcomps.csv"
     },
     content = function(file) {
-      vroom::vroom_write(grouped_lcomps, file, ",")
+      vroom::vroom_write(glcmps(), file, ",")
     }
   )
 
   output$grouped_plot_x <- renderUI({
-    vars <- c("Select one" = "", colnames(grouped_lcomps))
+    vars <- c("Select one" = "", colnames(glcmps()))
     selectInput("grouped_x",
                 "Choose what to plot on x-axis",
                 vars,
@@ -222,7 +223,7 @@ observeEvent(input$group, {
   })
 
   output$grouped_plot_y <- renderUI({
-    vars <- c(NA, colnames(grouped_lcomps))
+    vars <- c(NA, colnames(glcmps()))
     selectInput("grouped_y",
                 "Choose what to plot on y-axis",
                 vars,
@@ -230,7 +231,7 @@ observeEvent(input$group, {
   })
 
   output$grouped_plot_fill <- renderUI({
-    vars <- c(NA, colnames(grouped_lcomps))
+    vars <- c(NA, colnames(glcmps()))
     selectInput("grouped_fill",
                 "Choose what to color by",
                 vars,
@@ -238,41 +239,40 @@ observeEvent(input$group, {
   })
 
   output$grouped_plot_facet <- renderUI({
-    vars <- c(NA, colnames(grouped_lcomps))
+    vars <- c(NA, colnames(glcmps()))
     selectInput("grouped_facet",
                 "Choose what to facet by",
                 vars,
                 multiple = FALSE)
   })
 
-
-  observeEvent(input$plot_groupers, {
-    output$group_plot <- renderPlot(
-      grouped_plotter(
-        grouped_lcomps,
-        x = input$grouped_x,
-        y = input$grouped_y,
-        fill = input$grouped_fill,
-        facet = input$grouped_facet,
-        scales = "free"
-      )
+  group_plot <- eventReactive(input$plot_groupers, {
+    grouped_plotter(
+      glcmps(),
+      x = input$grouped_x,
+      y = input$grouped_y,
+      fill = input$grouped_fill,
+      facet = input$grouped_facet,
+      scales = "free"
     )
-
-    output$lcomp_plot <- renderPlot(
-      lcomp_plotter(
-        grouped_lcomps,
-        lbin = input$select_ldata,
-        n = "n",
-        fill = input$grouped_fill,
-        facet = input$grouped_facet,
-        scales = "free"
-      )
-    )
-  },
-  ignoreInit = TRUE)
-
 })
 
+  output$group_plot <- renderPlot(group_plot())
 
+
+  lcomp_plot <- eventReactive(input$plot_groupers,{
+
+    lcomp_plotter(
+      glcmps(),
+      lbin = input$select_ldata,
+      n = "n",
+      fill = input$grouped_fill,
+      facet = input$grouped_facet,
+      scales = "free"
+    )
+
+  })
+
+  output$lcomp_plot <- renderPlot(lcomp_plot())
 
 }

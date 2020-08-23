@@ -306,3 +306,21 @@ plotter <- function(data,
 plotter(b, x = "mes",y = "n", scales = "free", fill = "mes")
 ```
 
+# notes with call
+
+add in option for specifying what should be numeric 
+
+add in tallies for missing data
+add checkbox for download long / wide
+
+units / factoring
+
+balance
+
+gear
+
+instead of modify, diagnostics 
+
+2 way dat with filtering 
+
+make NAs explicit

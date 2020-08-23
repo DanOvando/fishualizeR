@@ -89,6 +89,7 @@ function(input,output){
       box(uiOutput("grouped_plot_fill")),
       box(uiOutput("grouped_plot_facet")),
       actionButton("plot_groupers","Plot Aggregate Data"),
+      plotOutput("lcomp_plot"),
       plotOutput("group_plot")
       )
     )

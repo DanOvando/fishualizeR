@@ -5,8 +5,8 @@ account: danovando
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 2662298
-bundleId: 3514654
+bundleId: 3514684
 url: https://danovando.shinyapps.io/fishualizeR/
-when: 1597383378.62245
+when: 1597384183.77027
 asMultiple: FALSE
 asStatic: FALSE

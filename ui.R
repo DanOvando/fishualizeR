@@ -48,6 +48,13 @@ function(input,output){
       fluidRow(box(title = "Load Data", "This will be a button for loading your data and specifying details about your data", width = 12)),
     fluidRow(box(title = "Length Composition Data", dataTableOutput("lcomps"), width = 12, solidHeader = TRUE, collapsible = TRUE)),
     fluidRow(
+      box(
+        uiOutput("select_ldata"),
+        "If rows represent tallies per length bin, select column with number of length bin",
+        uiOutput("select_tally")
+      )
+    ),
+    fluidRow(
     tabBox(
     title = "Examine Raw Data",
     id = "inspect",
@@ -71,11 +78,12 @@ function(input,output){
     width = 12)
     ), # close inspect fluidrow
     fluidRow(
+      box(title = "Assess Data Coverage", width = 12, solidHeader = TRUE, collapsible = TRUE,
+          uiOutput("cov_var_1"),
+          uiOutput("cov_var_2"))),
+    fluidRow(dataTableOutput("data_tally")), # close data coverage inspection
+    fluidRow(
       box(title = "Aggregate Lenth Data", width = 12,solidHeader = TRUE, collapsible = TRUE,
-          uiOutput("select_ldata")
-          ,
-      "If rows represent tallies per length bin, select column with number of length bin",
-      uiOutput("select_tally"),
       uiOutput("select_groupers"),
       actionButton("group","Aggregate Data"),
       dataTableOutput("grouped_lcomps"),

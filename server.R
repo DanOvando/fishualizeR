@@ -2,203 +2,133 @@
 
 
 
+funs <- list.files(here::here("R"))
+
+walk(funs, ~ source(here::here("R", .x)))
 
 server <- function(input, output, session) {
   # length composition ------------------------------------------------------
-  grouped_plotter <- function(data,
-                              x = NA,
-                              y = NA,
-                              fill = NA,
-                              facet = NA,
-                              scales = "free_y") {
-    facet <- ifelse(facet == "NA", NA, facet)
 
-    fill <- ifelse(fill == "NA", NA, fill)
+  lcomps <- read_csv(here("data", "BiometricosTable.csv")) %>%
+    janitor::clean_names()
 
-    y <- ifelse(y == "NA", NA, y)
+  output$lcomps <-
+    renderDataTable(lcomps,
+                    options = list(pageLength = 5))
 
+  output$inspectplot_x <- renderUI({
+    vars <- colnames(lcomps[map_lgl(lcomps, is.numeric)])
+    selectizeInput("inspectplot_x",
+                   "Select X Variable from raw data to plot",
+                   vars)
+  })
 
-
-    if (is.na(facet)) {
-      data$facet <-  ""
-      facet <- "facet"
-    }
-
-
-    if (!is.na(x) & !is.na(y)) {
-      if (!is.na(fill)) {
-        data %>%
-          ggplot(aes(
-            x = .data[[x]],
-            y = .data[[y]],
-            fill = .data[[fill]]
-          )) +
-          geom_point(shape = 21, size = 4) +
-          facet_wrap(vars(.data[[facet]]), scales = scales)
-
-      } else {
-        data %>%
-          ggplot(aes(x = .data[[x]],
-                     y = .data[[y]])) +
-          geom_point(shape = 21, size = 4) +
-          facet_wrap(vars(.data[[facet]]), scales = scales)
-
-      }
+  output$inspectplot_y <- renderUI({
+    vars <- c(NA, colnames(lcomps[map_lgl(lcomps, is.numeric)]))
+    selectizeInput("inspectplot_y",
+                   "Select Y Variable from raw data to plot",
+                   vars)
+  })
 
 
 
-    } else {
-      if (!is.na(fill)) {
-        data %>%
-          ggplot(aes(x = .data[[x]], fill = .data[[fill]])) +
-          geom_histogram() +
-          facet_wrap(vars(.data[[facet]]), scales = scales)
-      } else  {
-        data %>%
-          ggplot(aes(x = .data[[x]])) +
-          geom_histogram() +
-          facet_wrap(vars(.data[[facet]]), scales = scales)
+  # plot raw data data
 
-
-      }
-    }
-  }
-
-  lcomp_plotter <- function(data,
-                            lbin = NA,
-                            n = NA,
-                            fill = NA,
-                            facet = NA,
-                            scales = "free_y") {
-    facet <- ifelse(facet == "NA", NA, facet)
-
-    fill <- ifelse(fill == "NA", NA, fill)
-
-    if (is.na(facet)) {
-      data$facet <-  ""
-      facet <- "facet"
-    }
-
-    if (!is.na(fill)) {
-      data %>%
-        ggplot(aes(x = .data[[lbin]],
-                   y = .data[[n]],
-                   fill = .data[[fill]])) +
-        geom_col(shape = 21, size = 4) +
-        facet_wrap(vars(.data[[facet]]), scales = scales)
-
-    } else {
-      data %>%
-        ggplot(aes(x = .data[[lbin]],
-                   y = .data[[n]])) +
-        geom_col(shape = 21, size = 4) +
-        facet_wrap(vars(.data[[facet]]), scales = scales)
-
-    }
-
-  }
-
-
-lcomps <- read_csv(here("data", "BiometricosTable.csv")) %>%
-  janitor::clean_names()
-
-output$lcomps <-
-  renderDataTable(lcomps,
-                  options = list(pageLength = 5))
-
-output$inspectplot_x <- renderUI({
-  vars <- colnames(lcomps[map_lgl(lcomps, is.numeric)])
-  selectizeInput("inspectplot_x",
-                 "Select X Variable from raw data to plot",
-                 vars)
-})
-
-output$inspectplot_y <- renderUI({
-  vars <- c(NA, colnames(lcomps[map_lgl(lcomps, is.numeric)]))
-  selectizeInput("inspectplot_y",
-                 "Select Y Variable from raw data to plot",
-                 vars)
-})
-
-# filter and or subset data
-
-
-# plot data
-
-output$inspectplot <-
-  renderPlot(inspect_plot(
-    lcomps,
-    x = input$inspectplot_x,
-    y = input$inspectplot_y
-  ))
-
-# aggregate length data
-
-output$select_ldata <- renderUI({
-  vars <- c(NA, colnames(lcomps[map_lgl(lcomps, is.numeric)]))
-  selectizeInput("select_ldata",
-                 "Select the column with length data in it",
-                 vars)
-})
-
-output$select_tally <- renderUI({
-  vars <- c(NA, colnames(lcomps[map_lgl(lcomps, is.numeric)]))
-  selectizeInput("select_tally",
-                 "Select the column with the numbers per length bin in it",
-                 vars)
-})
-
-output$select_groupers <- renderUI({
-  vars <- c("Choose Grouping Variables" = "", colnames(lcomps))
-  selectInput("select_groupers",
-              "Select the variables to group by",
-              vars,
-              multiple = TRUE)
-})
-
-counter <-
-  function(data,
-           group_var = NULL,
-           length_col,
-           n_col = NA,
-           type = "obs") {
-    group_var = ifelse(is.na(group_var), NULL, group_var)
-
-    group_var <- c(group_var, length_col)
-
-    if (type == "obs") {
-      out <- data %>%
-        group_by(across({
-          {
-            group_var
-          }
-        })) %>%
-        count()
-    } else if (type == "counts") {
-      out <- data %>%
-        dplyr::group_by(dplyr::across({
-          {
-            group_var
-          }
-        })) %>%
-        dplyr::summarise(n = sum(.data[[n_col]]))
-
-    }
-
-    return(ungroup(out))
-
-
-  }
-
-
-glcmps <- eventReactive(input$group, {
-  grouped_lcomps <-
-    counter(
+  output$inspectplot <-
+    renderPlot(inspect_plot(
       lcomps,
-      group_var = input$select_groupers,
-      length_col = input$select_ldata
-    )
-})
+      x = input$inspectplot_x,
+      y = input$inspectplot_y
+    ))
+
+  # assess data coverage
+
+  output$cov_var_1 <- renderUI({
+
+    vars <- colnames(lcomps)
+
+    selectizeInput("cov_var_1",
+                   "Select 1st variable to assess coverage",
+                   vars)
+  })
+
+  output$cov_var_2 <- renderUI({
+
+    vars <- c(NA,colnames(lcomps))
+
+    selectizeInput("cov_var_2",
+                   "Select 2nd variable to assess coverage",
+                   vars)
+  })
+
+  output$data_tally <- renderDataTable(assess_coverage(lcomps,
+                                                   group_var1 = input$cov_var_1,
+                                                   group_var2 = input$cov_var_2,
+                                                   length_col = input$select_ldata) %>%
+                                         dplyr::mutate(pn = scales::percent(pn, accuracy = 0.01)) %>%
+                                         dplyr::mutate(p_missing = scales::percent(p_missing, accuracy = 0.01)) %>%
+                                         dplyr::rename("# of Observations" = n,
+                                                       "% of Total Observations" = pn,
+                                                       "# of Non-Missing Observations" = n_present,
+                                                       "% of Observations Missing" = p_missing),
+                                       options = list(pageLength = 5))
+#
+#   output$data_tally_plot <- renderPlot({
+#
+#     assess_coverage(lcomps,
+#                     group_var1 = input$cov_var_1,
+#                     group_var2 = input$cov_var_2,
+#                     length_col = input$select_ldata) %>%
+#       dplyr::mutate(pn = scales::percent(pn, accuracy = 0.01)) %>%
+#       dplyr::mutate(p_missing = scales::percent(p_missing, accuracy = 0.01)) %>%
+#       dplyr::rename("# of Observations" = n,
+#                     "% of Total Observations" = pn,
+#                     "# of Non-Missing Observations" = n_present,
+#                     "% of Observations Missing" = p_missing) %>%
+#       ggplot(aes())
+#
+#
+#   })
+
+  # if the thing is numeric, bin it. if it's discrete, convert things to "other" with less than a few observations.
+
+
+
+
+
+  # aggregate length data
+
+  output$select_ldata <- renderUI({
+    vars <- c(NA, colnames(lcomps[map_lgl(lcomps, is.numeric)]))
+    selectizeInput("select_ldata",
+                   "Select the column with length data in it",
+                   vars)
+  })
+
+  output$select_tally <- renderUI({
+    vars <- c(NA, colnames(lcomps[map_lgl(lcomps, is.numeric)]))
+    selectizeInput("select_tally",
+                   "Select the column with the numbers per length bin in it",
+                   vars)
+  })
+
+  output$select_groupers <- renderUI({
+    vars <- c("Choose Grouping Variables" = "", colnames(lcomps))
+    selectInput("select_groupers",
+                "Select the variables to group by",
+                vars,
+                multiple = TRUE)
+  })
+
+
+  glcmps <- eventReactive(input$group, {
+    grouped_lcomps <-
+      counter(
+        lcomps,
+        group_var = input$select_groupers,
+        length_col = input$select_ldata
+      )
+  })
 
   #https://mastering-shiny.org/action-transfer.html
   # remember tomorrow that you can return output of render / observed event as thing()
@@ -255,13 +185,12 @@ glcmps <- eventReactive(input$group, {
       facet = input$grouped_facet,
       scales = "free"
     )
-})
+  })
 
   output$group_plot <- renderPlot(group_plot())
 
 
-  lcomp_plot <- eventReactive(input$plot_groupers,{
-
+  lcomp_plot <- eventReactive(input$plot_groupers, {
     lcomp_plotter(
       glcmps(),
       lbin = input$select_ldata,

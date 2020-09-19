@@ -44,7 +44,7 @@ grouped_plotter <- function(data,
       data %>%
         ggplot(aes(x = .data[[x]],
                    y = .data[[y]])) +
-        geom_coun(shape = 21, size = 4) +
+        geom_point(shape = 21, size = 4) +
         facet_wrap(vars(.data[[facet]]), scales = scales) +
         theme_minimal()
 

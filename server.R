@@ -9,28 +9,55 @@ funs <- list.files(here::here("R"))
 walk(funs, ~ source(here::here("R", .x)))
 
 server <- function(input, output, session) {
+
   # length composition ------------------------------------------------------
 
+  ldata <- reactiveValues(lcomps = NA)
+
+  tmp <- reactive({
+
+    req(input$file)
+
+    ext <- tools::file_ext(input$file$name)
+    switch(ext,
+           csv = vroom::vroom(input$file$datapath, delim = ","),
+           tsv = vroom::vroom(input$file$datapath, delim = "\t"),
+           validate("Invalid file; Please upload a .csv file")
+    )
+
+    tmp <- read.csv(input$file$datapath) %>%
+      janitor::clean_names()
+
+    ldata$lcomps <- tmp
+
+    ldata$oglcomps <- tmp
+
+  })
+
+  observeEvent(input$file, {
+
+    ldata$lcomps <- tmp()
+
+  })
 
 
-  lcomps <- read_csv(here("data", "BiometricosTable.csv")) %>%
-    janitor::clean_names()
-
-  ldata <- reactiveValues(lcomps = lcomps)
 
   output$max_length <- renderUI({
+    req(input$file)
     sliderInput(
       "max_length",
       "Select Max. Realistic Length",
       min = 0,
-      max = max(lcomps[, input$select_ldata], na.rm = TRUE),
-      value =  max(lcomps[, input$select_ldata], na.rm = TRUE)
+      max = max(ldata$lcomps[, input$select_ldata], na.rm = TRUE),
+      value =  max(ldata$lcomps[, input$select_ldata], na.rm = TRUE)
     )
 
   })
 
   output$max_length_factor <- renderUI({
-    ldat <- lcomps[[input$select_ldata]]
+    req(input$file)
+
+    ldat <- ldata$lcomps[[input$select_ldata]]
 
     ratio_guess <-
       plyr::round_any(mean(ldat[ldat > input$max_length], na.rm = TRUE) / mean(ldat[ldat < input$max_length], na.rm = TRUE), 10)
@@ -50,13 +77,13 @@ server <- function(input, output, session) {
       "min_length",
       "Select Min. Realistic Length",
       min = 0,
-      max = max(lcomps[, input$select_ldata], na.rm = TRUE),
+      max = max(ldata$lcomps[, input$select_ldata], na.rm = TRUE),
       value = 0
     )
   })
 
   output$min_length_ratio <- renderUI({
-    ldat <- lcomps[[input$select_ldata]]
+    ldat <- ldata$lcomps[[input$select_ldata]]
 
     ratio_guess <-
       plyr::round_any(mean(ldat[ldat < input$min_length], na.rm = TRUE) / mean(ldat[ldat > input$min_length], na.rm = TRUE), 10)
@@ -74,7 +101,7 @@ server <- function(input, output, session) {
 
 observeEvent(input$correct_units, {
 
-    clcomps <- lcomps
+    clcomps <- ldata$lcomps
 
     tmp <- clcomps[[input$select_ldata]]
 
@@ -86,7 +113,7 @@ observeEvent(input$correct_units, {
 
 observeEvent(input$reset, {
 
-  ldata$lcomps <- lcomps
+  ldata$lcomps <- ldata$oglcomps
 
 })
 
@@ -100,12 +127,15 @@ observeEvent(input$reset, {
 
 
 output$colnames <- renderUI({
-  selectInput("colnames", "Select Columns To View", choices = colnames(lcomps), selected = colnames(lcomps)[1:pmin(10, ncol(lcomps))],multiple = TRUE)
+  req(input$file)
+  selectInput("colnames", "Select Columns To View", choices = colnames(ldata$lcomps), selected = colnames(ldata$lcomps)[1:pmin(10, ncol(ldata$lcomps))],multiple = TRUE)
 
 })
 
   output$lcomps <-
-    DT::renderDataTable(ldata$lcomps[,input$colnames],
+    DT::renderDataTable({
+      req(input$file)
+      ldata$lcomps[,input$colnames]},
                     filter = "top",
                     options = list(pageLength = 5, autoWidth = TRUE))
 
@@ -207,6 +237,7 @@ output$colnames <- renderUI({
 
 
   output$cov_var_3 <- renderUI({
+    req(input$file)
     tmp <- assess_coverage(
       ldata$lcomps,
       group_var1 = input$cov_var_1,
@@ -232,6 +263,7 @@ output$colnames <- renderUI({
 
 
   output$data_tally_plot <- renderPlot({
+    req(input$file)
     tmp <- assess_coverage(
       ldata$lcomps,
       group_var1 = input$cov_var_1,
@@ -269,7 +301,9 @@ output$colnames <- renderUI({
 
   })
 
-  cov_data <-   reactive({assess_coverage(
+  cov_data <-   reactive({
+    req(input$file)
+    assess_coverage(
     ldata$lcomps,
     group_var1 = input$cov_var_1,
     group_var2 = input$cov_var_2,
@@ -285,7 +319,10 @@ output$colnames <- renderUI({
     )})
 
   output$data_tally <- DT::renderDataTable(
-    cov_data(),
+    {
+      req(input$file)
+      cov_data()
+      },
     filter = "top",
     options = list(pageLength = 5, autoWidth = TRUE)
   )
@@ -328,7 +365,7 @@ output$colnames <- renderUI({
 
   output$select_ldata <- renderUI({
 
-    vars <- colnames(lcomps[map_lgl(lcomps, is.numeric)])
+    vars <- colnames(ldata$lcomps[map_lgl(ldata$lcomps, is.numeric)])
 
     guess <- vars[stringr::str_detect(vars,"(length)|(longitud)")][1]
 
@@ -348,7 +385,7 @@ output$colnames <- renderUI({
   })
 
   output$select_groupers <- renderUI({
-    vars <- c("Choose Grouping Variables" = "", colnames( ldata$lcomps))
+    vars <- c("Choose Grouping Variables" = "", colnames(ldata$lcomps))
     selectInput("select_groupers",
                 "Select the variables to group by",
                 vars,
@@ -381,6 +418,8 @@ output$colnames <- renderUI({
   )
 
   output$grouped_plot_x <- renderUI({
+    req(input$file)
+
     vars <- c("Select one" = "", colnames(glcmps()))
     selectInput("grouped_x",
                 "Choose what to plot on x-axis",
@@ -389,6 +428,8 @@ output$colnames <- renderUI({
   })
 
   output$grouped_plot_y <- renderUI({
+    req(input$file)
+
     vars <- c(NA, colnames(glcmps()))
     selectInput("grouped_y",
                 "Choose what to plot on y-axis",
@@ -397,6 +438,8 @@ output$colnames <- renderUI({
   })
 
   output$grouped_plot_fill <- renderUI({
+    req(input$file)
+
     vars <- c(NA, colnames(glcmps()))
     selectInput("grouped_fill",
                 "Choose what to color by",
@@ -405,6 +448,8 @@ output$colnames <- renderUI({
   })
 
   output$grouped_plot_facet <- renderUI({
+    req(input$file)
+
     vars <- c(NA, colnames(glcmps()))
     selectInput("grouped_facet",
                 "Choose what to facet by",

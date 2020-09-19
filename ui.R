@@ -48,7 +48,7 @@ function(input,output){
     h1("fishualizeR"),
     "fishualizeR helps users visualize common fishery related data. To start, click on the 'Length Composition' tab."),
     tabItem(tabName = "lcomps",
-      fluidRow(box(title = "Load Data",fileInput("file", NULL), width = 12)),
+      fluidRow(box(title = "Load Data as .csv file (max size 50 MB)",fileInput("file", NULL), width = 12)),
       # numericInput("n", "Rows", value = 5, min = 1, step = 1),
       # tableOutput("head"),
     fluidRow(box(title = "Length Composition Data",

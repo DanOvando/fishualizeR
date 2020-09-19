@@ -109,6 +109,9 @@ observeEvent(input$correct_units, {
       clcomps[tmp > input$max_length & !is.na(tmp), input$select_ldata] / input$max_length_factor
 
     ldata$lcomps <- clcomps
+
+    updateTabsetPanel(session, inputId="inspect", selected = "Plot Raw Data")
+
   })
 
 observeEvent(input$reset, {

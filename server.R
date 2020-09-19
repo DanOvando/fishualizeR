@@ -16,8 +16,10 @@ server <- function(input, output, session) {
 
   tmp <- reactive({
 
-    req(input$file)
 
+    if (input$example == FALSE){
+      req(input$file)
+    }
     ext <- tools::file_ext(input$file$name)
     switch(ext,
            csv = vroom::vroom(input$file$datapath, delim = ","),
@@ -28,9 +30,9 @@ server <- function(input, output, session) {
     tmp <- read.csv(input$file$datapath) %>%
       janitor::clean_names()
 
-    ldata$lcomps <- tmp
+    # ldata$lcomps <- tmp
 
-    ldata$oglcomps <- tmp
+    # ldata$oglcomps <- tmp
 
   })
 
@@ -38,12 +40,36 @@ server <- function(input, output, session) {
 
     ldata$lcomps <- tmp()
 
+    ldata$oglcomps <- tmp()
+
+
+  })
+
+  tmp2 <- reactive({
+
+    lcomps <- read.csv(here::here("data","BiometricosTable.csv")) %>%
+      janitor::clean_names()
+
+  })
+
+  observeEvent(input$example,{
+
+    if (input$example == TRUE){
+
+    ldata$lcomps <- tmp2()
+
+    ldata$oglcomps <- tmp2()
+    }
+
   })
 
 
 
   output$max_length <- renderUI({
+
+    if (input$example == FALSE){
     req(input$file)
+    }
     sliderInput(
       "max_length",
       "Select Max. Realistic Length",
@@ -55,8 +81,10 @@ server <- function(input, output, session) {
   })
 
   output$max_length_factor <- renderUI({
-    req(input$file)
 
+    if (input$example == FALSE){
+      req(input$file)
+    }
     ldat <- ldata$lcomps[[input$select_ldata]]
 
     ratio_guess <-
@@ -130,14 +158,20 @@ observeEvent(input$reset, {
 
 
 output$colnames <- renderUI({
-  req(input$file)
+
+  if (input$example == FALSE){
+    req(input$file)
+  }
   selectInput("colnames", "Select Columns To View", choices = colnames(ldata$lcomps), selected = colnames(ldata$lcomps)[1:pmin(10, ncol(ldata$lcomps))],multiple = TRUE)
 
 })
 
   output$lcomps <-
     DT::renderDataTable({
-      req(input$file)
+
+      if (input$example == FALSE){
+        req(input$file)
+      }
       ldata$lcomps[,input$colnames]},
                     filter = "top",
                     options = list(pageLength = 5, autoWidth = TRUE))
@@ -240,7 +274,10 @@ output$colnames <- renderUI({
 
 
   output$cov_var_3 <- renderUI({
-    req(input$file)
+
+    if (input$example == FALSE){
+      req(input$file)
+    }
     tmp <- assess_coverage(
       ldata$lcomps,
       group_var1 = input$cov_var_1,
@@ -266,7 +303,10 @@ output$colnames <- renderUI({
 
 
   output$data_tally_plot <- renderPlot({
-    req(input$file)
+
+    if (input$example == FALSE){
+      req(input$file)
+    }
     tmp <- assess_coverage(
       ldata$lcomps,
       group_var1 = input$cov_var_1,
@@ -305,7 +345,10 @@ output$colnames <- renderUI({
   })
 
   cov_data <-   reactive({
-    req(input$file)
+
+    if (input$example == FALSE){
+      req(input$file)
+    }
     assess_coverage(
     ldata$lcomps,
     group_var1 = input$cov_var_1,
@@ -323,7 +366,10 @@ output$colnames <- renderUI({
 
   output$data_tally <- DT::renderDataTable(
     {
-      req(input$file)
+
+      if (input$example == FALSE){
+        req(input$file)
+      }
       cov_data()
       },
     filter = "top",
@@ -421,8 +467,10 @@ output$colnames <- renderUI({
   )
 
   output$grouped_plot_x <- renderUI({
-    req(input$file)
 
+    if (input$example == FALSE){
+      req(input$file)
+    }
     vars <- c("Select one" = "", colnames(glcmps()))
     selectInput("grouped_x",
                 "Choose what to plot on x-axis",
@@ -431,8 +479,10 @@ output$colnames <- renderUI({
   })
 
   output$grouped_plot_y <- renderUI({
-    req(input$file)
 
+    if (input$example == FALSE){
+      req(input$file)
+    }
     vars <- c(NA, colnames(glcmps()))
     selectInput("grouped_y",
                 "Choose what to plot on y-axis",
@@ -441,8 +491,10 @@ output$colnames <- renderUI({
   })
 
   output$grouped_plot_fill <- renderUI({
-    req(input$file)
 
+    if (input$example == FALSE){
+      req(input$file)
+    }
     vars <- c(NA, colnames(glcmps()))
     selectInput("grouped_fill",
                 "Choose what to color by",
@@ -451,8 +503,10 @@ output$colnames <- renderUI({
   })
 
   output$grouped_plot_facet <- renderUI({
-    req(input$file)
 
+    if (input$example == FALSE){
+      req(input$file)
+    }
     vars <- c(NA, colnames(glcmps()))
     selectInput("grouped_facet",
                 "Choose what to facet by",

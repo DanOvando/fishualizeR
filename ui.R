@@ -48,6 +48,7 @@ function(input,output){
     h1("fishualizeR"),
     "fishualizeR helps users visualize common fishery related data. To start, click on the 'Length Composition' tab."),
     tabItem(tabName = "lcomps",
+      checkboxInput("example","Use Example Data?"),
       fluidRow(box(title = "Load Data as .csv file (max size 50 MB)",fileInput("file", NULL), width = 12)),
       # numericInput("n", "Rows", value = 5, min = 1, step = 1),
       # tableOutput("head"),
@@ -68,7 +69,7 @@ function(input,output){
     tabPanel(
     "Plot Raw Data",
     br(),
-    "Use this area to explore your data data",
+    "Use this area to explore your raw data",
     uiOutput("raw_plot_x"),
     uiOutput("raw_plot_y"),
     uiOutput("raw_plot_fill"),
@@ -109,7 +110,7 @@ function(input,output){
       "Use this area to bin your length data by different groups. For example, you can count the total number of individuals in each length bin by year and month and region",
       uiOutput("select_groupers"),
       "Use this area to specify a bin width for your length data (unless your data are already binned)",
-      numericInput("bin_width","Length Bin Width", min = 0, value = 1),
+      sliderInput("bin_width","Length Bin Width", min = 0, value = 1, max = 20, step = 0.25),
       actionButton("group","Aggregate Data"),
       dataTableOutput("grouped_lcomps"),
       downloadButton("download_grouper", "Download Aggregated Data"),
@@ -121,7 +122,7 @@ function(input,output){
       uiOutput("grouped_plot_fill"),
       uiOutput("grouped_plot_facet"),
       checkboxInput("factorfill","Convert Color Variable to Categorical?", value = FALSE),
-      actionButton("plot_groupers","Plot Aggregated Data"),
+      actionButton("plot_groupers","Plot Length Composition Data"),
       plotOutput("lcomp_plot")
      )
     )

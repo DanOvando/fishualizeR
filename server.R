@@ -105,23 +105,76 @@ output$colnames <- renderUI({
 })
 
   output$lcomps <-
-    renderDataTable(ldata$lcomps[,input$colnames],
-                    options = list(pageLength = 5))
+    DT::renderDataTable(ldata$lcomps[,input$colnames],
+                    filter = "top",
+                    options = list(pageLength = 5, autoWidth = TRUE))
 
-  output$inspectplot_x <- renderUI({
-    vars <- colnames(ldata$lcomps[map_lgl(ldata$lcomps, is.numeric)])
-    selectInput("inspectplot_x",
-                   "Select X Variable from raw data to plot",
-                   vars,
-                   selected = input$select_ldata)
+
+  # inspect raw data
+
+  output$raw_plot_x <- renderUI({
+    vars <- c("Select one" = "", colnames(ldata$lcomps))
+    selectInput("raw_x",
+                "Choose what to plot on x-axis",
+                vars,
+                multiple = FALSE,
+                selected = input$select_ldata)
   })
 
-  output$inspectplot_y <- renderUI({
-    vars <- c(NA, colnames(ldata$lcomps[map_lgl(ldata$lcomps, is.numeric)]))
-    selectInput("inspectplot_y",
-                   "Select Y Variable from raw data to plot",
-                   vars)
+  output$raw_plot_y <- renderUI({
+    vars <- c(NA,  colnames(ldata$lcomps))
+    selectInput("raw_y",
+                "Choose what to plot on y-axis",
+                vars,
+                multiple = FALSE)
   })
+
+  output$raw_plot_fill <- renderUI({
+    vars <- c(NA, colnames(ldata$lcomps))
+    selectInput("raw_fill",
+                "Choose what to color by",
+                vars,
+                multiple = FALSE)
+  })
+
+  output$raw_plot_facet <- renderUI({
+    vars <- c(NA, colnames(ldata$lcomps))
+    selectInput("raw_facet",
+                "Choose what to facet by",
+                vars,
+                multiple = FALSE)
+  })
+
+  raw_plot <- eventReactive(input$plot_raw, {
+    grouped_plotter(
+      ldata$lcomps,
+      x = input$raw_x,
+      y = input$raw_y,
+      fill = input$raw_fill,
+      facet = input$raw_facet,
+      factorfill = input$raw_factorfill,
+      scales = "free"
+    )
+  })
+
+  output$raw_plot <- renderPlot(raw_plot())
+
+
+
+  #  output$inspectplot_x <- renderUI({
+  #   vars <- colnames(ldata$lcomps[map_lgl(ldata$lcomps, is.numeric)])
+  #   selectInput("inspectplot_x",
+  #                  "Select X Variable from raw data to plot",
+  #                  vars,
+  #                  selected = input$select_ldata)
+  # })
+  #
+  # output$inspectplot_y <- renderUI({
+  #   vars <- c(NA, colnames(ldata$lcomps[map_lgl(ldata$lcomps, is.numeric)]))
+  #   selectInput("inspectplot_y",
+  #                  "Select Y Variable from raw data to plot",
+  #                  vars)
+  # })
 
 
 
@@ -216,24 +269,37 @@ output$colnames <- renderUI({
 
   })
 
+  cov_data <-   reactive({assess_coverage(
+    ldata$lcomps,
+    group_var1 = input$cov_var_1,
+    group_var2 = input$cov_var_2,
+    length_col = input$select_ldata
+  ) %>%
+    dplyr::mutate(pn = scales::percent(pn / 100, accuracy = 0.01)) %>%
+    dplyr::mutate(p_missing = scales::percent(p_missing / 100, accuracy = 0.01)) %>%
+    dplyr::rename(
+      "# of Observations" = n,
+      "% of Total Observations" = pn,
+      "# of Non-Missing Observations" = n_present,
+      "% of Observations Missing" = p_missing
+    )})
 
-  output$data_tally <- renderDataTable(
-    assess_coverage(
-      ldata$lcomps,
-      group_var1 = input$cov_var_1,
-      group_var2 = input$cov_var_2,
-      length_col = input$select_ldata
-    ) %>%
-      dplyr::mutate(pn = scales::percent(pn / 100, accuracy = 0.01)) %>%
-      dplyr::mutate(p_missing = scales::percent(p_missing / 100, accuracy = 0.01)) %>%
-      dplyr::rename(
-        "# of Observations" = n,
-        "% of Total Observations" = pn,
-        "# of Non-Missing Observations" = n_present,
-        "% of Observations Missing" = p_missing
-      ),
-    options = list(pageLength = 5)
+  output$data_tally <- DT::renderDataTable(
+    cov_data(),
+    filter = "top",
+    options = list(pageLength = 5, autoWidth = TRUE)
   )
+
+  output$download_coverage <- downloadHandler(
+    filename = function() {
+      "data-coverage.csv"
+    },
+    content = function(file) {
+      vroom::vroom_write(cov_data(), file, ",")
+    }
+  )
+
+
   #
   #   output$data_tally_plot <- renderPlot({
   #
@@ -303,7 +369,7 @@ output$colnames <- renderUI({
   #https://mastering-shiny.org/action-transfer.html
   # remember tomorrow that you can return output of render / observed event as thing()
   output$grouped_lcomps <-
-    renderDataTable(glcmps(),  options = list(pageLength = 5))
+    DT::renderDataTable(glcmps(), filter = "top", options = list(pageLength = 5, autoWidth = TRUE))
 
   output$download_grouper <- downloadHandler(
     filename = function() {

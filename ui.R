@@ -12,6 +12,7 @@ library(dplyr)
 library(tidyr)
 library(vroom)
 library(hrbrthemes)
+library(DT)
 
 shiny_theme <- hrbrthemes::theme_ipsum(base_size = 14,
                                        axis_title_size = 16)
@@ -63,11 +64,15 @@ function(input,output){
     id = "inspect",
     tabPanel(
     "Plot Raw Data",
+    br(),
     "Use this area to explore your data data",
-    box(uiOutput("inspectplot_x")),
-    box(uiOutput("inspectplot_y")),
-    plotOutput("inspectplot",
-               height = "300px"),
+    uiOutput("raw_plot_x"),
+    uiOutput("raw_plot_y"),
+    uiOutput("raw_plot_fill"),
+    uiOutput("raw_plot_facet"),
+    actionButton("plot_raw","Plot Data"),
+    checkboxInput("raw_factorfill","Convert Color Variable to Categorical?", value = FALSE),
+    plotOutput("raw_plot"),
     br(),
     br()
     ),
@@ -93,6 +98,7 @@ function(input,output){
           uiOutput("cov_var_1"),
           uiOutput("cov_var_2"),
           uiOutput("cov_var_3"))),
+    fluidRow(downloadButton("download_coverage", "Download Data Coverage Summary")),
     fluidRow(plotOutput("data_tally_plot")),
     fluidRow(dataTableOutput("data_tally")),
     fluidRow(
@@ -100,7 +106,7 @@ function(input,output){
       "Use this area to bin your length data by different groups. For example, you can count the total number of individuals in each length bin by year and month and region",
       uiOutput("select_groupers"),
       "Use this area to specify a bin width for your length data (unless your data are already binned)",
-      numericInput("bin_width","Length Bin Width", min = 0, value = NA),
+      numericInput("bin_width","Length Bin Width", min = 0, value = 1),
       actionButton("group","Aggregate Data"),
       dataTableOutput("grouped_lcomps"),
       downloadButton("download_grouper", "Download Aggregated Data"),
@@ -108,16 +114,13 @@ function(input,output){
     ),
     fluidRow(
       box(title = "Plot Aggregated Length Data", width = 12,solidHeader = TRUE, collapsible = TRUE,
-      "Use this area to examine your aggregated data",
-      box(uiOutput("grouped_plot_x")),
-      box(uiOutput("grouped_plot_y")),
-      box(uiOutput("grouped_plot_fill")),
-      box(uiOutput("grouped_plot_facet")),
+      "Use this area to examine your aggregated length data",
+      uiOutput("grouped_plot_fill"),
+      uiOutput("grouped_plot_facet"),
       checkboxInput("factorfill","Convert Color Variable to Categorical?", value = FALSE),
       actionButton("plot_groupers","Plot Aggregated Data"),
-      plotOutput("lcomp_plot"),
-      plotOutput("group_plot")
-      )
+      plotOutput("lcomp_plot")
+     )
     )
     ) # close lcomps tab
   )

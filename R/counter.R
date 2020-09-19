@@ -3,10 +3,22 @@ counter <-
            group_var = NULL,
            length_col,
            n_col = NA,
-           type = "obs") {
+           type = "obs",
+           bin_width = NA) {
     group_var = ifelse(is.na(group_var), NULL, group_var)
 
-    group_var <- c(group_var, length_col)
+    if (!is.na(bin_width)) {
+      data$length_bin <-
+        plyr::round_any(data[[length_col]], bin_width, f = floor) + bin_width / 2
+
+
+    } else {
+
+      data$length_bin <- data[[length_col]]
+
+    }
+
+    group_var <- c(group_var, "length_bin")
 
     if (type == "obs") {
       out <- data %>%

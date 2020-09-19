@@ -24,9 +24,9 @@ assess_coverage <-
       })) %>%
       dplyr::summarise(n = length(.data[[length_col]]),
                        n_present =  sum(!is.na(.data[[length_col]])),
-                       p_missing = mean(is.na(.data[[length_col]]))) %>%
+                       p_missing = mean(is.na(.data[[length_col]])) * 100) %>%
       dplyr::ungroup() %>%
-      dplyr::mutate(pn = n / obs)
+      dplyr::mutate(pn = (n / obs) * 100)
     } else {
       out <- NA
     }

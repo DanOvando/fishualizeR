@@ -324,3 +324,13 @@ instead of modify, diagnostics
 2 way dat with filtering 
 
 make NAs explicit
+
+# last few things
+
+add in upload feature
+
+add download feature to each table
+
+Move plotting up to the raw data section
+
+write bullet for what the app currently does and what comes next

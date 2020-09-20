@@ -7,28 +7,52 @@
 
 <!-- badges: end -->
 
-The goal of fishualizeR is to …
+fishulizeR is a shiny app, available at
+<https://danovando.shinyapps.io/fishualizeR/>, built for helping users
+walk through common visualization and quality control for the kinds of
+data commonly encountered in fisheries. The current version of the app
+only support length composition data (for example dockside measurements
+of fish lengths or scuba surveys of fish lengths)
 
-What is special about using `README.Rmd` instead of just `README.md`?
-You can include R chunks like so:
+The app currently
 
-``` r
-summary(cars)
-#>      speed           dist       
-#>  Min.   : 4.0   Min.   :  2.00  
-#>  1st Qu.:12.0   1st Qu.: 26.00  
-#>  Median :15.0   Median : 36.00  
-#>  Mean   :15.4   Mean   : 42.98  
-#>  3rd Qu.:19.0   3rd Qu.: 56.00  
-#>  Max.   :25.0   Max.   :120.00
-```
+1.  Allows users to upload length composition data stored in a csv file
 
-You’ll still need to render `README.Rmd` regularly, to keep `README.md`
-up-to-date.
+<!-- end list -->
 
-You can also embed plots, for example:
+  - .csv is required to ensure that users to not attempt to store
+    information in for example column colors
+  - Length composition data can either be raw observations or binned
+    counts (for example 10 individuals between 115 and 20 cm)
 
-![](README_files/figure-gfm/pressure-1.png)<!-- -->
+<!-- end list -->
 
-In that case, don’t forget to commit and push the resulting figure
-files, so they display on GitHub\!
+2.  Allows users to plot and examine their raw data
+
+<!-- end list -->
+
+  - including color and faceting
+  - Users can also correct common problems in consistent units
+    (e.g. centimeters and milimeters) with length composition data
+
+<!-- end list -->
+
+3.  Allows users to assess their data coverage
+
+<!-- end list -->
+
+  - For example, see how many samples they have over time or by
+    location, or both
+  - Also allows them to see where data are missing
+  - Data-coverage metrics can be downloaded for further examination
+
+<!-- end list -->
+
+4.  Allows users to aggregate their data
+
+<!-- end list -->
+
+  - Users can set the desired width of their aggregated length bins
+  - They can then count the number of observations per length bin at any
+    level of aggregation (for example year and fishing zone)
+  - Aggregated data can then be downloaded and plotted

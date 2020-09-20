@@ -434,7 +434,7 @@ output$colnames <- renderUI({
   })
 
   output$select_groupers <- renderUI({
-    vars <- c("Choose Grouping Variables" = "", colnames(ldata$lcomps))
+    vars <- c("Choose Grouping Variables" = "", colnames(ldata$lcomps)[!colnames(ldata$lcomps) %in% c(input$select_ldata, input$select_tally,"n","length_bin")])
     selectInput("select_groupers",
                 "Select the variables to group by",
                 vars,
@@ -508,7 +508,8 @@ output$colnames <- renderUI({
     if (input$example == FALSE){
       req(input$file)
     }
-    vars <- c(NA, colnames(glcmps()))
+    vars <- c(NA, colnames(glcmps())[!colnames(glcmps()) %in% c(input$select_ldata, input$select_tally,"n","length_bin")])
+
     selectInput("grouped_facet",
                 "Choose what to facet by",
                 vars,

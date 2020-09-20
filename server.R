@@ -282,7 +282,8 @@ output$colnames <- renderUI({
       ldata$lcomps,
       group_var1 = input$cov_var_1,
       group_var2 = input$cov_var_2,
-      length_col = input$select_ldata
+      length_col = input$select_ldata,
+      n_col = input$select_tally
     ) %>%
       dplyr::rename(
         "# of Length Observations" = n,
@@ -311,7 +312,8 @@ output$colnames <- renderUI({
       ldata$lcomps,
       group_var1 = input$cov_var_1,
       group_var2 = input$cov_var_2,
-      length_col = input$select_ldata
+      length_col = input$select_ldata,
+      n_col = input$select_tally
     ) %>%
       dplyr::rename(
         "# of Length Observations" = n,
@@ -319,8 +321,6 @@ output$colnames <- renderUI({
         "# of Non-Missing Length Observations" = n_present,
         "% of Length Observations Missing" = p_missing
       )
-
-
 
     axis_vars <-
       colnames(tmp)[1:(which(colnames(tmp) == "# of Length Observations") - 1)]
@@ -448,7 +448,8 @@ output$colnames <- renderUI({
         ldata$lcomps,
         group_var = input$select_groupers,
         length_col = input$select_ldata,
-        bin_width = input$bin_width
+        bin_width = input$bin_width,
+        n_col = input$select_tally
       )
   })
 
@@ -483,7 +484,7 @@ output$colnames <- renderUI({
     if (input$example == FALSE){
       req(input$file)
     }
-    vars <- c(NA, colnames(glcmps()))
+    vars <- c(NA, colnames(glcmps())[!colnames(glcmps()) %in% c(input$select_ldata, input$select_tally,"n","length_bin")])
     selectInput("grouped_y",
                 "Choose what to plot on y-axis",
                 vars,
@@ -495,7 +496,7 @@ output$colnames <- renderUI({
     if (input$example == FALSE){
       req(input$file)
     }
-    vars <- c(NA, colnames(glcmps()))
+    vars <- c(NA, colnames(glcmps())[!colnames(glcmps()) %in% c(input$select_ldata, input$select_tally,"n","length_bin")])
     selectInput("grouped_fill",
                 "Choose what to color by",
                 vars,

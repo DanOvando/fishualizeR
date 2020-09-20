@@ -5,6 +5,14 @@ counter <-
            n_col = NA,
            type = "obs",
            bin_width = NA) {
+
+
+    if (n_col == "NA"){
+      type = "obs"
+    } else {
+      type = "counts"
+    }
+
     group_var = ifelse(is.na(group_var), NULL, group_var)
 
     if (!is.na(bin_width)) {
@@ -29,6 +37,7 @@ counter <-
         })) %>%
         count()
     } else if (type == "counts") {
+
       out <- data %>%
         dplyr::group_by(dplyr::across({
           {
